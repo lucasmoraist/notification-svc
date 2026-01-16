@@ -1,3 +1,43 @@
 spring:
+  profiles:
+    active: ${PROFILE_ACTIVE:default}
   application:
     name: notification-svc
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${JSM_EMAIL}
+    password: ${JSM_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  cloud:
+    config:
+      fail-fast: true
+    stream:
+      bindings:
+        fromWalletCore-in-0:
+          destination: payflow-exchange
+          group: ${spring.application.name}
+          content-type: application/json
+          consumer:
+            concurrency: 5
+            max-attempts: 3
+            back-off-initial-interval: 300
+            back-off-multiplier: 2.0
+      rabbit:
+        bindings:
+          fromWalletCore-in-0:
+            consumer:
+              binding-routing-key: "transfer.success,transfer.failed"
+              binding-routing-key-delimiter: ","
+              auto-bind-dlq: false
+              republish-to-dlq: false
+              transactional: true
+
+logging:
+  level:
+    com.lucasmoraist: ${LOG_LEVEL:DEBUG}
